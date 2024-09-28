@@ -1,70 +1,137 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useState, useEffect } from "react";
+import { Image, StyleSheet, Text, View, TouchableOpacity, Platform } from "react-native";
+//import WebView from "react-native-webview";
+import * as Location from "expo-location";
+import MapView, { Marker } from "react-native-maps";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+export default function Map({ }) {
+  const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-export default function HomeScreen() {
+  useEffect(() => {
+    setTimeout(() => {
+      const getLocation = async () => {
+        try {
+          let { status } = await Location.requestForegroundPermissionsAsync();
+          console.log("page renreders");
+          if (status !== "granted") {
+            setError("Permission to access location was denied");
+            return;
+          }
+
+          let location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.BestForNavigation,
+          });
+
+          setLocation(location);
+        } catch (error) {
+          console.error("Error getting location:", error);
+          setError("Error getting location: " + (error as Error).message);
+        }
+      };
+
+      getLocation();
+    }, 50);
+  });
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      <View
+        style={{
+          width: "100%",
+          height: "105%",
+        }}
+      >
+        <View style={styles.mapContainer}>
+          {location ? (
+            <MapView
+              style={styles.mapview}
+              initialRegion={{
+                latitude: 21.194755,
+                longitude: 81.320499,
+                latitudeDelta: 0.0922,
+                longitudeDelta: 0.0421,
+              }}
+            >
+              <Marker
+                //image={require("../../assets/images/car.png")}
+                coordinate={{
+                  latitude: location ? location.coords.latitude : 20,
+                  longitude: location ? location.coords.longitude : 20,
+                }}
+                title="EV Station"
+              />
+              <Marker
+                coordinate={{
+                  latitude: 21.160351,
+                  longitude: 81.3360273,
+                }}
+                title="Tata Power"
+                pinColor="green"
+              />
+              <Marker
+                coordinate={{
+                  latitude: 21.217997,
+                  longitude: 81.318398,
+                }}
+                title="Statiq"
+                pinColor="green"
+              />
+              <Marker
+                coordinate={{
+                  latitude: 21.218401,
+                  longitude: 81.309571,
+                }}
+                title="Charger Point"
+                pinColor="green"
+              />
+            </MapView>
+          ) : (
+            <Text>Loading...</Text>
+          )}
+          {error && <Text>Error: {error}</Text>}
+        </View>
+        {/* {location ? (
+        <View>
+          <Text>Latitude: {location.coords.latitude}</Text>
+          <Text>Longitude: {location.coords.longitude}</Text>
+        </View>
+      ) : (
+        <Text>Loading...</Text>
+      )}
+      {error && <Text>Error: {error}</Text>} */}
+      </View>
+    </View>
   );
 }
-
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "grey",
+    paddingTop: 50,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  separator: {
+    marginVertical: 30,
+    height: 1,
+    width: "80%",
+  },
+  mapContainer: {
+    width: "100%",
+    height: "95%",
+  },
+  map: {
+    width: "100%",
+    height: "100%",
+  },
+  mapview: {
+    flex: 1,
+    height: "100%",
+    width: "100%",
   },
 });
